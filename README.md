@@ -165,6 +165,15 @@ BMS units appear automatically as devices in MQTT integration:
 
 ![MQTT Devices](https://raw.githubusercontent.com/jean-luc1203/jkbms-rs485-addon/main/images/JKBMS-in-MQTT-devices.png)
 
+### ⛑ Here is a list of all topics that are created automatically.
+MQTT Topics Structure - JK-BMS Add-on
+The JK-BMS add-on publishes three categories of data via MQTT
+1. Live Data
+2. Configuration Parameters (Settings)
+3. Static Specifications
+
+All topics are described in the documentation ![here](https://github.com/jean-luc1203/jkbms-rs485-addon/blob/main/Documentation/mqtt_topics_documentation.md) !
+
 ### Rich Entity Set
 Full sensor coverage for monitoring and automation:
 
@@ -225,6 +234,27 @@ See [CHANGELOG.md](https://github.com/jean-luc1203/jkbms-rs485-addon/blob/main/C
 ❇️ To report problems or request features, use [GitHub issues](https://github.com/jean-luc1203/jkbms-rs485-addon/issues).
 
 For general questions and community support, visit our [Discussions](https://github.com/jean-luc1203/jkbms-rs485-addon/discussions).
+
+---
+
+## 🆘 Having an issue? Choose the right template!
+
+When opening a new issue, please **select one of these templates** (required):
+
+| Template | When to use | Example |
+|----------|-------------|---------|
+| **🐛 Bug report** | Something is **broken** or crashes | "No data received", "CRC errors", "Add-on crashes" |
+| **❓ Question/Support** | **Installation help** or **configuration** | "How do I connect via TCP gateway?", "Entities unavailable" |
+| **✨ Feature request** | You have an **idea** for improvement | "Add diagnostic sensors", "Support JBD BMS" |
+
+**Why templates?** They help me understand your setup quickly and give you the fastest possible help. 🙏
+
+**Before opening:**
+1. Read [FAQ.md](FAQ.md) ✅
+2. Check existing issues (use search) 🔍
+3. Try the [Diagnostic Dashboard](#diagnostic-dashboard) if no data is received 📊
+
+**Pro tip:** Include a screenshot of your **Diagnostic Dashboard** (if available) — it shows me instantly if it's a connection problem! 🚀
 
 ---
 
