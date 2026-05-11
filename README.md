@@ -7,10 +7,11 @@ It helps other Home Assistant users discover this project.
 [![Community Forum](https://img.shields.io/badge/community-forum-blue)](https://github.com/jean-luc1203/jkbms-rs485-addon/discussions)
 [![Reddit](https://img.shields.io/badge/reddit-r%2Fhomeassistant-orange)](https://www.reddit.com/r/homeassistant/)
 ---
+❗️ Personal/non-commercial use permitted; business/professional/commercial use requires a separate commercial license.
 
 # Smartphoton JK-BMS RS485 & CAN Bus Add-on
 
-> **4200+ installations** · **50+ daily clones** · **Community-driven development**
+> **4800+ installations** · **50+ daily clones** · **Community-driven development**
 
 ## 🚀 Major Upgrade: Variable Cell Count Support (1S to 16S) - 2026-04-05
 
@@ -96,7 +97,18 @@ Direct CAN bus broadcasting via the second RJ45 connector.
 ![Hardware Connection Guide](https://raw.githubusercontent.com/jean-luc1203/jkbms-rs485-addon/main/images/Fonctionnement-LED-cable-rs485.gif)
 
 ---
+## 💢 Important Safety Note 
 
+This add-on is designed for monitoring, automation and energy optimization.
+It should not be the only safety layer of an electrical installation.
+
+A failure of Home Assistant, Node-RED, MQTT, USB/RS485 communication or the host system should not be able, by itself, to create a critical power situation.
+
+Please ensure your installation keeps safe fallback behavior, hardware protections, and conservative default settings even if this add-on stops working or loses communication.
+
+⚠️ See [SAFETY.md](SAFETY.md) for more details and recommended fail-safe design principles.
+
+---
 ## 🛠️ Installation
 
 ### Via Home Assistant Add-on Store
