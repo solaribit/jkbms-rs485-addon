@@ -1,5 +1,112 @@
-# Changelog — v4.1.7
+## 4.1.14 — 2026-11-16
 
+### Corrected — Premium HTML dashboards ([#192](https://github.com/jean-luc1203/jkbms-rs485-addon/issues/192))
+- In JK-BMS Premium HTML, use recently observed Broadcasting SETUP identities instead of assuming the Master is followed by addresses 2 through N. Supports BMS address 1 and non-consecutive addresses without inventing battery slots.
+- Ignore stale observed addresses and cap displayed slots to the configured BMS count. Before discovery, do not substitute fabricated slots.
+- In Home Energy House, keep the Master and slave BMS address 1 distinct when counting batteries.
+- Preserve the production add-on slug, options and dashboard port 1891, and retain the Legacy 4.1.13 identity/integrity fixes.
+
+### Validation and scope
+- JK-BMS Premium HTML checked on an isolated HAOS add-on with Master 0 and secondary BMS at addresses 1, 2, 3 and 4.
+- 17 automated scenarios and 34 server/browser assertions passed; the patch was also applied successfully to a copy of the bundled 590-node flow.
+- The Home Energy correction was checked in source/tests, **not yet validated on HAOS**. A complete Docker build and upgrade test were not performed before merge.
+- TCP gateway reconnection and stale LIVE indications observed during separate testing are **not addressed** by this release.
+
+## 4.1.13 — 2026-11-15
+
+> **IMPORTANT — BACK UP HOME ASSISTANT BEFORE UPDATING.** Create a **full Home Assistant backup** that includes the JK-BMS Legacy add-on and its Supervisor-managed options. Keep a copy outside Home Assistant when possible. Retain the previous 4.1.12 backup in case a firmware-specific reply format is not supported by the stricter validation. A GitHub release is not by itself a one-click HAOS rollback.
+>
+> For the first restart, verify the configured serial `/dev/serial/by-id/...` path or TCP gateway, BMS count, Broadcasting/Active Polling mode, MQTT connectivity, alarms, Premium license and dashboards. Only run **one** JK-BMS Legacy/test add-on at a time on the same RS485 port/gateway.
+
+### Corrected — BMS identity and phantom devices ([#166](https://github.com/jean-luc1203/jkbms-rs485-addon/issues/166))
+- Reject malformed or out-of-range JK-BMS reply identifiers **before** publishing MQTT/Home Assistant Discovery or alarm messages.
+- Route Broadcasting DATA/SETUP according to validated Modbus reply identity instead of mutable global or pending polling state, preventing BMS data being assigned to another pack.
+- Strengthen integrity validation: JK body checksums, Modbus CRC16, supported reply lengths, register/function/address consistency and SETUP internal BMS identity where applicable.
+- In Active Polling, verify DATA, SETUP, STATIC and 9-byte FC03 alarm replies, including requested-versus-reported BMS address. Do not publish unverified identities.
+
+### Corrected — communication and recovery
+- Fix the **TCP Active Polling** rate limiter dropping alarm polling requests silently. Queue requests without raising the gateway's configured polling rate.
+- Fix the legacy **TCP Broadcasting** watchdog: run only in Broadcasting gateway mode and use supported tcp-client2 `close` / `connect` actions instead of unsupported `disconnect`. See also [#165](https://github.com/jean-luc1203/jkbms-rs485-addon/issues/165).
+- Recover properly from network interruptions on tested Ethernet gateway hardware without creating phantom BMS identities.
+
+### Logs and diagnostics
+- Reduce repetitive Issue #166 diagnostic summaries during normal operation. Enable existing `communication_debug: true` only temporarily when troubleshooting; detailed counters then appear at INFO level.
+- Actual bad frames, rejected MQTT identities and watchdog issues still generate warnings, rate-limited to prevent flooding. Invalid frames remain rejected, not silently accepted.
+
+### Verified compatibility
+- Real hardware: **two JK-BMS**, NB114 RS485/Ethernet and CH340 USB-RS485; **Broadcasting and Active Polling** validated in both transports. TCP disconnect/reconnection tested; a malformed 8-byte alarm reply was correctly rejected.
+- Premium SPV2 license and two-BMS dashboards tested in HAOS with the candidate.
+- Automated acceptance: **81 regression tests + 2 startup/migration simulations**, all passed. The startup simulation covered upgrading an existing 4.1.12 Node-RED directory and a fresh install.
+- Production add-on slug, options, MQTT identities and the dashboard port `1891` are preserved.
+
+### Important limits / existing behaviors
+- Frame validation is intentionally strict: the observed Active Polling profile uses 308-byte DATA/SETUP/STATIC replies and 9-byte FC03 alarms. Not every possible JK-BMS firmware or third-party gateway has been tested. If a previously working device stops reporting, **do not disable checks blindly**: collect sanitized logs with `communication_debug` enabled, plus BMS model/firmware/transport, and report them on GitHub.
+- Previously retained MQTT topics and HA devices from phantom BMS identities **are not automatically deleted**. Remove only verified orphaned topics; never bulk-clear `homeassistant/#`.
+- Legacy's pre-existing periodic MQTT Discovery republishing is **not changed**; optimization is tracked separately in [#191](https://github.com/jean-luc1203/jkbms-rs485-addon/issues/191).
+- The original Legacy startup behavior overwrites its flow at each start; manually customized flows should be backed up separately.
+
+**Before upgrading:** full HA backup first. The [v4.1.12 source release](https://github.com/jean-luc1203/jkbms-rs485-addon/releases/tag/v4.1.12) remains available, but downgrading on HAOS may require restoring a backup rather than selecting an older version in the UI.
+
+## 4.1.12 — 2026-10-09
+
+### Added
+- DRY1 and DRY2 live contact status as Home Assistant MQTT binary sensors in Legacy Active Polling and Broadcasting.
+- In Legacy Active Polling: writable DRY1/DRY2 trigger source selectors (codes 00–14), plus four trigger/release threshold controls.
+- Targeted BMS STATIC readback after a configuration write, confirming the device value rather than optimistically updating MQTT states.
+
+### Reliability and compatibility
+- Modbus FC16 register updates preserve adjacent parameters sharing registers (including LCD buzzer and UART settings).
+- Duplicate-write suppression, pending-write timeouts and write authorization checks.
+- DRY settings are not exposed for editing in Broadcasting; live contact monitoring remains available.
+- Existing Legacy communication paths and v4.1.11 Broadcasting address mapping are retained.
+
+### Field tests
+- JK Bluetooth application confirmed DRY1/DRY2 source changes and DRY trigger thresholds.
+- DRY1 physical relay operation confirmed using a multimeter.
+- LCD buzzer configuration preserved during DRY1 writes with buzzer source set to OFF.
+- Broadcasting startup and both DRY contact sensors confirmed on BMS_master and BMS_2 after clearing MQTT Discovery.
+- Fast targeted STATIC confirmations generally below 3 seconds in repeated field tests.
+
+### Known limitations
+- Active Polling requires consecutive physical addresses beginning at 1. Non-consecutive addresses such as 1 and 3 remain unsupported.
+- Direct MQTT injection protection in Broadcasting and every possible trigger source/firmware combination were not exhaustively field-tested.
+- Source-specific interpretation of raw threshold values may vary by firmware.
+
+## 4.1.11 — 2026-10-01
+
+### Fix
+- Fixed Premium dashboard BMS mapping in Broadcasting mode.
+- Correct handling of installations using `BMS_master` with slave addresses such as `BMS_1`, `BMS_2`, etc.
+- Dashboard now follows the BMS addresses actually detected from SETUP frames.
+- Discovery reset logic updated accordingly.
+
+### Compatibility
+- Existing Broadcasting installations remain supported.
+- Non-Broadcasting mode is unchanged.
+- No changes to RS485, MQTT topics, CAN bus or BMS write logic.
+
+##  4.1.10 - 2026-07-12
+## Improved JK-BMS communication diagnostics
+
+- Added a unified diagnostic system for both **Broadcast** and **Active Polling** modes.
+- The dashboard now detects the communication mode automatically and shows only the relevant counters.
+- Added a global health status, quality score and persistent incident memory to simplify troubleshooting.
+- Improved detection of missing BMS, timeouts, latency, framing and polling stability.
+- Corrected false alarms caused by short or concatenated serial/TCP buffers, which are now treated as normal transport behaviour when frames are reconstructed correctly.
+
+<img width="586" height="623" alt="image" src="https://github.com/user-attachments/assets/56d041ba-db1a-4a17-b652-d3cb3cdf3c9e" />
+
+
+##  4.1.9 - 2026-07-11
+
+##  4.1.8 - 2026-07-08
+#### 🐞 Fixes
+
+- Incorrect baud rate for the serial port
+- Incorrect path retrieved from global variables
+- Minor fix in the premium dashboard
+
+# v4.1.7
 ## 🏠 Smart Energy Premium House Dashboard
 
 This release introduces the **Smart Energy Premium House Dashboard** directly inside the JK-BMS add-on.
